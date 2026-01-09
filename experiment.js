@@ -6,10 +6,17 @@ var jsPsych = initJsPsych({
     }
 });
 
+function generateRandomId() {
+    const baseId = Math.floor(Math.random() * 999) + 1;
+    return baseId;
+}
+
+const random_id = generateRandomId()
+
 
 // Declare variables at the top
 var study_id = "borrowing_adult_artifacts";
-var participant_id = jsPsych.data.getURLVariable('PROLIFIC_PID');
+var participant_id = jsPsych.data.getURLVariable('PROLIFIC_PID')  || random_id;
 var session_id = jsPsych.data.getURLVariable('SESSION_ID');
 
 var today = new Date();
@@ -147,12 +154,7 @@ function onSaveComplete() {
     window.location = "https://app.prolific.co/submissions/complete?cc=XXXXXX";  // Replace XXXXXX with your code
 }
 
-function generateRandomId() {
-    const baseId = Math.floor(Math.random() * 999) + 1;
-    return baseId;
-}
 
-const random_id = generateRandomId()
 
 
 // Configure save_data trial

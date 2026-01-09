@@ -6,10 +6,12 @@ var jsPsych = initJsPsych({
     }
 });
 
-var pids = {}
 
 // Declare variables at the top
-var study_id = "borrowing_kids_pilot";
+var study_id = "borrowing_adult_artifacts";
+var participant_id = jsPsych.data.getURLVariable('PROLIFIC_PID');
+var session_id = jsPsych.data.getURLVariable('SESSION_ID');
+
 var today = new Date();
 var dd = String(today.getDate()).padStart(2, '0');
 var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -19,6 +21,9 @@ const session_time = today.toLocaleTimeString();
 const session_date = mm + '/' + dd + '/' + yyyy;
 
 jsPsych.data.addProperties({
+    participant_id: participant_id,
+    study_id: study_id,
+    session_id: session_id,
     session_date: session_date,
     session_time: session_time
 });
@@ -34,16 +39,7 @@ if (Math.floor(Math.random() * 2) == 0) {
     condition = "familiar_word_condition";
 }
 
-var preload = {
-    type: jsPsychPreload,
-    audio: ['audio/pick_two_apples.wav','audio/pick_two_carrots.wav',
-        'audio/pick_two_mushrooms.wav','audio/pick_two_leaves.wav','audio/pick_two_flowers.wav','audio/pick_two_shells.wav',
-        'audio/pick_two_cups.wav', 'audio/pick_two_spoons.wav', 'audio/pick_two_hats.wav', 'audio/pick_two_shoes.wav',
-        'audio/pick_two_bines.wav','audio/pick_two_palts.wav','audio/pick_two_tinches.wav','audio/pick_two_nefts.wav',
-        'audio/pick_two_datches.wav', 'audio/pick_two_serns.wav', 'audio/pick_two_leams.wav', 'audio/pick_two_gades.wav'
-    ],
-    show_detailed_errors: true
-}
+
 
 // Define all stimulus categories and their images
 const stimulusCategories = {
@@ -97,20 +93,6 @@ const stimulusCategories = {
     ]
 };
 
-const practiceCategories = {
-    'carrots': [
-        'carrot_carrot_1_0.png', 'carrot_carrot_2_0.png', 'carrot_carrot_3_0.png',
-        'carrot_carrot_4_0.png', 'carrot_carrot_5_0.png', 'carrot_carrot_6_0.png',
-        'broccoli_broccoli_1_0.png', 'broccoli_broccoli_2_0.png', 'broccoli_broccoli_3_0.png',
-        'broccoli_broccoli_4_0.png', 'broccoli_broccoli_5_0.png', 'broccoli_broccoli_6_0.png'
-    ],
-    'apples': [
-        'apple_apple_1_0.png', 'apple_apple_2_0.png', 'apple_apple_3_0.png',
-        'apple_apple_4_0.png', 'apple_apple_5_0.png', 'apple_apple_6_0.png',
-        'strawberry_strawberry_1_0.png', 'strawberry_strawberry_2_0.png', 'strawberry_strawberry_3_0.png',
-        'strawberry_strawberry_4_0.png', 'strawberry_strawberry_5_0.png', 'strawberry_strawberry_6_0.png'
-    ]
-}
 
 function shuffle(array) {
     let currentIndex = array.length;
@@ -127,27 +109,41 @@ if (condition === "novel_word_condition") {
     shuffle(novel_words);
 }
 
-var pre_survey_trial =  {
-    type: jsPsychSurveyText,
-    questions: [
-        {prompt: 'Participant ID', name: 'participant_id'},
-        {prompt: 'Age', name: 'participant_age'}
-    ],
-    on_finish: function() {
-        try {
-            const responseData = jsPsych.data.getLastTrialData().values()[0].response;
-            console.log("PID:", responseData.participant_id);
-            console.log("Age:", responseData.participant_age);
-            pids.participant_id = responseData.participant_id
-            pids.participant_age = responseData.participant_age
-        } catch (e) {
-            console.error("Error parsing survey responses:", e);
+// Create consent trial
+const consent = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+        <div style="width: 800px;">
+            <h3>Consent to Participate in Research</h3>
+            <p>Protocol Director: Robert Hawkins </p>
+            <p>Protocol Title: Communication and social cognition in natural audiovisual contexts IRB# 77226 </p>
+
+            <p>DESCRIPTION: You are invited to participate in a research study about language and communication. The purpose of the research is to understand how you use and learn about words. This research will be conducted through the Prolific platform, including participants from the US, UK, and Canada. If you decide to participate in this research, you will play a short language game. </p>
+            <p>TIME INVOLVEMENT: The task is estimated to last less than 5 minutes. You are free to withdraw from the study at any time. </p>
+            <p>RISKS AND BENEFITS: You may become frustrated or bored if you do not like the task. Study data will be stored securely, in compliance with Stanford University standards, minimizing the risk of confidentiality breach. This study advances our scientific understanding of how people communicate. We cannot and do not guarantee or promise that you will receive any benefits from this study.</p>
+            <p>PAYMENTS: You will receive payment in the amount advertised on Prolific. If you do not complete this study, you will receive prorated payment based on the time that you have spent if you contact the experimenters.</p>
+            <p>PARTICIPANT'S RIGHTS: If you have read this form and have decided to participate in this project, please understand your participation is voluntary and you have the right to withdraw your consent or discontinue participation at any time without penalty or loss of benefits to which you are otherwise entitled. The alternative is not to participate. You have the right to refuse to answer particular questions. The results of this research study may be presented at scientific or professional meetings or published in scientific journals. Your individual privacy will be maintained in all published and written data resulting from the study. In accordance with scientific norms, the data from this study may be used or shared with other researchers for future research (after removing personally identifying information) without additional consent from you.</p>
+            <p>CONTACT INFORMATION: Questions: If you have any questions, concerns or complaints about this research, its procedures, risks and benefits, contact the Protocol Director, Robert Hawkins (
+rdhawkins@stanford.edu, 217-549-6923). </p>
+            <p>Independent Contact: If you are not satisfied with how this study is being conducted, or if you have any concerns, complaints, or general questions about the research or your rights as a participant, please contact the Stanford Institutional Review Board (IRB) to speak to someone independent of the research team at 650-723-2480 or toll free at 1-866-680-2906, or email at irbnonmed@stanford.edu. You can also write to the Stanford IRB, Stanford University, 1705 El Camino Real, Palo Alto, CA 94306. Please save or print a copy of this page for your records.</p>
+            <p>Please click "I Agree" if you wish to participate.</p>
+        </div>
+    `,
+    choices: ['I Agree', 'I Do Not Agree'],
+    data: {
+        trial_type: 'consent'
+    },
+    on_finish: function(data) {
+        if(data.response == 1) {
+            jsPsych.endExperiment('Thank you for your time. The experiment has been ended.');
         }
     }
-}
+};
+
 
 function onSaveComplete() {
     console.log('Data saved');
+    window.location = "https://app.prolific.co/submissions/complete?cc=XXXXXX";  // Replace XXXXXX with your code
 }
 
 function generateRandomId() {
@@ -157,26 +153,12 @@ function generateRandomId() {
 
 const random_id = generateRandomId()
 
-var start_button = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: '',
-    choices: ['smiley'],
-    button_html: ['<img src=stimuli/misc/%choice%.png></img>']
-}
-
-var post = {
-    type: jsPsychCategorizeImage,
-    stimulus: 'stimuli/misc/smiley.png',
-    key_answer: '',
-    text_answer: '',
-    choices: ['b'],
-}
 
 // Configure save_data trial
 const save_data = {
     type: jsPsychPipe,
     action: "save",
-    experiment_id: "sPY6vEQmdfQL",
+    experiment_id: "RfN6XiuGFFg3",
     filename: () => `borrowing_kid_${random_id}.csv`,
     data_string: () => {
         const allTrials = jsPsych.data.get().values();
@@ -207,6 +189,9 @@ const save_data = {
 
         return [headers, ...rows].join('\n');
     },
+        on_finish: () => {
+        window.location.href = "https://app.prolific.com/submissions/complete?cc=CR3289CP"; //Update with new prolific completion code
+    }
 };
 
 // Function to create image grid trial
@@ -216,8 +201,7 @@ function createImageGridTrial(category, trialNumber) {
                      category;
     
     return {
-        type: jsPsychImageGridSelectAudio,
-        stimulus: `audio/pick_two_${trialWord}.wav`,
+        type: jsPsychImageGridSelect,
         stimulus_folder: `stimuli/${category}`,
         this_word: trialWord,
         required_clicks: 2,
@@ -228,7 +212,9 @@ function createImageGridTrial(category, trialNumber) {
         data: {
             trial_type: 'image_grid',
             trial_number: trialNumber,
+            participant_id: participant_id,
             study_id: study_id,
+            session_id: session_id,
             condition: condition,
             category: category,
             word: trialWord
@@ -236,32 +222,22 @@ function createImageGridTrial(category, trialNumber) {
     };
 }
 
-// Function to create practice image grid trial
-function createPracticeImageGridTrial(category, trialNumber) {
-    const trialWord = category;
-    
-    return {
-        type: jsPsychImageGridSelectAudio,
-        stimulus: `audio/pick_two_${category}.wav`,
-        stimulus_folder: `stimuli/${category}`,
-        this_word: trialWord,
-        required_clicks: 2,
-        images_per_row: 4,
-        grid_spacing: 20,
-        max_image_width: 200,
-        image_names: practiceCategories[category],
-        data: {
-            trial_type: 'image_grid',
-            trial_number: trialNumber,
-            study_id: study_id,
-            session_date: session_date,
-            session_time: session_time,
-            condition: condition,
-            category: category,
-            word: trialWord
-        }
-    };
-}
+// Create instructions trial
+const instructions = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+        <div style="width: 800px;">
+            <h2>Instructions</h2>
+            <p>In this task, you will select images to indicate your understanding of new or familiar words. If you encounter an unfamiliar word and are unsure about its meaning, select what makes the most sense to you.</p>
+            <p>Click "Begin" when you're ready to start.</p>
+        </div>
+    `,
+    choices: ['Begin'],
+    data: {
+        trial_type: 'instructions'
+    }
+};
+
 
 // Wait for document to be ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -273,25 +249,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Create timeline
-    const timeline = [];
-    timeline.push(preload)
-    timeline.push(pre_survey_trial)
-    timeline.push(start_button)
+    const timeline = [
+        consent,
+        instructions
+    ];
 
     // Get categories and shuffle them
     const categories = Object.keys(stimulusCategories);
     shuffle(categories);
-    const practice_categories = Object.keys(practiceCategories);
-    shuffle(practice_categories);
-
 
     // Create trials
     let trialCounter = 0;
-    for (const category of practice_categories) {
-        const trial = createPracticeImageGridTrial(category, trialCounter);
-        timeline.push(trial);
-        trialCounter++;
-    }
     for (const category of categories) {
         const trial = createImageGridTrial(category, trialCounter);
         timeline.push(trial);
@@ -299,7 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     timeline.push(save_data);
-    timeline.push(post);
     
     // Run the experiment
     jsPsych.run(timeline);

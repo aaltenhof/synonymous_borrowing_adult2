@@ -130,6 +130,7 @@ rdhawkins@stanford.edu, 217-549-6923). </p>
         </div>
     `,
     choices: ['I Agree', 'I Do Not Agree'],
+    button_html: ['<button class="jspsych-btn">%choice%</button>', '<button class="jspsych-btn">%choice%</button>'],
     data: {
         trial_type: 'consent'
     },
@@ -159,17 +160,13 @@ const save_data = {
     type: jsPsychPipe,
     action: "save",
     experiment_id: "RfN6XiuGFFg3",
-    filename: () => `borrowing_kid_${random_id}.csv`,
-    data_string: () => {
+    filename: () => `borrowing_adult2_${random_id}.csv`,
+        data_string: () => {
         const allTrials = jsPsych.data.get().values();
-
         const imageTrials = allTrials
-            .filter(trial => trial.trial_type === 'image-grid-select-audio')
+            .filter(trial => trial.trial_type === 'image-grid-select')
             .flatMap(trial => [trial[0], trial[1]]);
 
-        console.log(allTrials)
-        console.log("PIDs are")
-        console.log(pids)
         // Add function to extract ID and typicality from filename
         const parseImageInfo = (filename) => {
             const parts = filename.split('_');
@@ -180,17 +177,16 @@ const save_data = {
             };
         };
 
-
-        const headers = 'participant_id,study_id,participant_age,session_date,session_time,trial_number,condition,category,image_name,image_location,word,click_order,rt,id,typicality';
+        const headers = 'participant_id,study_id,session_id,trial_number,condition,category,image_name,word,click_order,rt,id,typicality';
         const rows = imageTrials.map(trial => {
             const imageInfo = parseImageInfo(trial.image_name);
-            return `${pids.participant_id || ''},${trial.study_id || ''},${pids.participant_age || ''},${session_date || ''},${session_time || ''},${trial.trial_number},${trial.condition},${trial.category},${trial.image_name},${trial.image_location},${trial.word},${trial.click_order},${trial.rt},${imageInfo.id},${imageInfo.typicality}`;
+            return `${trial.participant_id},${trial.study_id || ''},${trial.session_id || ''},${trial.trial_number},${trial.condition},${trial.category},${trial.image_name},${trial.word},${trial.click_order},${trial.rt},${imageInfo.id},${imageInfo.typicality}`;
         });
 
         return [headers, ...rows].join('\n');
     },
-        on_finish: () => {
-        window.location.href = "https://app.prolific.com/submissions/complete?cc=CR3289CP"; //Update with new prolific completion code
+    on_finish: () => {
+        window.location.href = "https://app.prolific.com/submissions/complete?cc=CR3289CP"; //update with new prolifci complete
     }
 };
 
@@ -233,6 +229,7 @@ const instructions = {
         </div>
     `,
     choices: ['Begin'],
+    button_html: ['<button class="jspsych-btn">%choice%</button>'],
     data: {
         trial_type: 'instructions'
     }
